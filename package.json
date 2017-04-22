@@ -7,7 +7,7 @@
   "dependencies": {},
   "pebble": {
     "displayName": "kooci",
-    "uuid": "cf1e5604-d9ea-40eb-8b0b-23194274dc9f",
+    "uuid": "8CB491E3-4A2E-4094-8B04-17F6954F99C5",
     "sdkVersion": "3",
     "enableMultiJS": true,
     "targetPlatforms": [
