@@ -6,18 +6,22 @@
   "private": true,
   "dependencies": {},
   "pebble": {
-    "main": {
-      "rockyjs": "src/rocky/index.js",
-      "pkjs": "src/pkjs/index.js"
-    },
     "displayName": "kooci",
-    "uuid": "0a5111e8-c2e5-44d1-a19b-4ab9c627ab3c",
-    "projectType": "rocky",
+    "uuid": "cf1e5604-d9ea-40eb-8b0b-23194274dc9f",
     "sdkVersion": "3",
     "enableMultiJS": true,
+    "targetPlatforms": [
+      "aplite",
+      "basalt",
+      "chalk",
+      "diorite"
+    ],
     "watchapp": {
-      "watchface": true
+      "watchface": false
     },
+    "messageKeys": [
+      "dummy"
+    ],
     "resources": {
       "media": []
     }
