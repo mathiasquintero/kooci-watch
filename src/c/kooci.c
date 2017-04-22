@@ -1,6 +1,7 @@
 #include <pebble.h>
 
-bool ready_to_send = false;
+bool ready_to_send = true;
+#define ACCEL_STEP_MS 50
 
 static Window *s_window;
 static TextLayer *s_text_layer;
@@ -52,7 +53,7 @@ static void prv_deinit(void) {
   window_destroy(s_window);
 }
 
-static void accel_data_handler(AccelData *data, uint32_t num_samples) {
+/*static void accel_data_handler(AccelData *data, uint32_t num_samples) {
   // Read sample 0's x, y, and z values
   uint16_t x = data[0].x;
   uint16_t y = data[0].y;
@@ -105,8 +106,19 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
     // The outbox cannot be used right now
     APP_LOG(APP_LOG_LEVEL_ERROR, "Error preparing the outbox: %d", (int)result);
   }
-}
+} */
 
+static void timer_callback(void *data) {
+
+  AccelData accel = (AccelData) { .x = 0, .y = 0, .z = 0 };
+  accel_service_peek(&accel);
+
+  if(!accel.did_vibrate || ready_to_send)
+  {
+    APP_LOG(APP_LOG_LEVEL_INFO, "t: %llu, x: %d, y: %d, z: %d", accel.timestamp, accel.x, accel.y, accel.z);
+  }
+  app_timer_register(ACCEL_STEP_MS, timer_callback, NULL);
+}
 
 static void outbox_sent_callback(DictionaryIterator *iter, void *context) {
   APP_LOG(APP_LOG_LEVEL_INFO, "Message succesfully received by MATHIASSSSSSSS");
@@ -119,14 +131,19 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
  ready_to_send = true;
 }
 
+static void init(void) {
+  accel_data_service_subscribe(0, NULL);
+  app_timer_register(ACCEL_STEP_MS, timer_callback, NULL);
+}
+
 int main(void) {
   prv_init();
+  init();
 
   // Open AppMessage
   const int inbox_size = 1024;
   const int outbox_size = 1024;
   app_message_open(inbox_size, outbox_size);
-  accel_data_service_subscribe(10, accel_data_handler);
   app_message_register_outbox_sent(outbox_sent_callback);
   app_message_register_inbox_received(inbox_received_callback);
 
