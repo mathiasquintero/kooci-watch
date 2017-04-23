@@ -1,7 +1,7 @@
 #include <pebble.h>
 
-bool ready_to_send = true;
-#define ACCEL_STEP_MS 50
+bool ready_to_send = false;
+#define ACCEL_STEP_MS 70
 
 static Window *s_window;
 static TextLayer *s_text_layer;
@@ -113,15 +113,46 @@ static void timer_callback(void *data) {
   AccelData accel = (AccelData) { .x = 0, .y = 0, .z = 0 };
   accel_service_peek(&accel);
 
-  if(!accel.did_vibrate || ready_to_send)
+  if(!accel.did_vibrate && ready_to_send)
   {
-    APP_LOG(APP_LOG_LEVEL_INFO, "t: %llu, x: %d, y: %d, z: %d", accel.timestamp, accel.x, accel.y, accel.z);
+     int x = accel.x;
+     int y = accel.y;
+     int z = accel.z;
+
+    APP_LOG(APP_LOG_LEVEL_INFO, "t: %llu, x: %d, y: %d, z: %d", accel.timestamp, x, y, z);
+    DictionaryIterator *out_iter;
+    // Prepare the outbox buffer for this message
+   AppMessageResult result = app_message_outbox_begin(&out_iter);
+    if(result == APP_MSG_OK )
+    {
+      dict_write_int(out_iter, 0, &x, sizeof(int), true);
+      dict_write_int(out_iter, 1, &y, sizeof(int), true);
+      dict_write_int(out_iter, 2, &z, sizeof(int), true);
+
+      result = app_message_outbox_send();
+
+      if(result != APP_MSG_OK)
+      {
+        APP_LOG(APP_LOG_LEVEL_ERROR, "Error sending the outbox: %d", (int)result);
+      }
+      else
+      {
+        APP_LOG(APP_LOG_LEVEL_INFO, "Sent the message succesfully");
+        ready_to_send = false;
+      }
+
+    }
+    else
+    {
+      APP_LOG(APP_LOG_LEVEL_ERROR, "Error preparing the outbox: %d", (int)result);
+    }
+
   }
   app_timer_register(ACCEL_STEP_MS, timer_callback, NULL);
 }
 
 static void outbox_sent_callback(DictionaryIterator *iter, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Message succesfully received by MATHIASSSSSSSS");
+  //APP_LOG(APP_LOG_LEVEL_INFO, "Message succesfully received by MATHIASSSSSSSS");
   ready_to_send = true;
 }
 
